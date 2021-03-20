@@ -1,0 +1,111 @@
+# TODO: https://docs.gitlab.com/13.9/ee/ci/yaml/README.html#globally-defined-image-services-cache-before_script-after_script
+image: golang:1.16
+
+variables:
+  TF_ROOT: $CI_PROJECT_DIR/deploy
+
+cache:
+  key: $TF_ROOT
+  paths:
+    - $TF_ROOT/.terraform/
+    - $TF_ROOT/.terraform.lock.hcl
+
+stages:
+  - test
+  - build
+  - package
+  - predeploy
+  - deploy
+
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
+go-tests:
+  stage: test
+  extends: .go-cache
+  before_script:
+    - go mod tidy
+  script:
+    - go fmt ./...
+    - go vet ./...
+    - make test
+
+terraform-tests:
+  stage: test
+  image:
+    name: hashicorp/terraform:0.14.8
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - cd $TF_ROOT
+    - terraform init
+  script:
+    - terraform fmt -recursive -check
+    - terraform validate
+
+build:
+  stage: build
+  extends: .go-cache
+  script:
+    - make build
+
+package:
+  only:
+    refs:
+      - master
+  stage: package
+  extends: .go-cache
+  before_script:
+    - apt-get update && apt-get install -y zip
+  script:
+    - make package
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    expire_in: 1 week
+    paths:
+      - artifacts/*.zip
+
+plan:
+  only:
+    refs:
+      - master
+  stage: predeploy
+  image:
+    name: hashicorp/terraform:0.14.8
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  before_script:
+    - cd $TF_ROOT
+  script:
+    - terraform plan -var-file=$TFVARSFILE -out tfplan
+  artifacts:
+    name: tfplan
+    expire_in: 1 week
+    paths:
+      - $TF_ROOT/tfplan
+
+apply:
+  when: manual
+  only:
+    refs:
+      - master
+  stage: deploy
+  image:
+    name: hashicorp/terraform:0.14.8
+    entrypoint:
+      - '/usr/bin/env'
+      - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  environment:
+    name: production
+  before_script:
+    - cd $TF_ROOT
+  script:
+    - terraform apply -auto-approve -var-file=$TFVARSFILE
