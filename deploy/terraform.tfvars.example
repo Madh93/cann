@@ -1,0 +1,9 @@
+announcements = {
+  ndptf = {
+    base_url         = "https://www.gobiernodecanarias.org/educacion/6/dgper/nombradiarios/Docs"
+    date_format      = "02-01-06"
+    telegram_chat_id = "@nombramientos_maestros_tfe"
+  }
+}
+schedule_expression = "cron(*/1 6-20 ? * 2-6 *)"
+telegram_auth_token = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
