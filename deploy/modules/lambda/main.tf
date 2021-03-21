@@ -17,7 +17,7 @@ resource "aws_lambda_function" "this" {
 
   # Code package
   filename         = "../artifacts/${local.function_name_path}.zip"
-  source_code_hash = filebase64sha256("../lambda/${local.function_name_path}/main.go")
+  source_code_hash = filebase64sha256("../artifacts/${local.function_name_path}.zip")
 
   # General configuration
   description = var.description
