@@ -35,7 +35,7 @@ This is just a pet project to play with Go, Terraform and Serverless architectur
 ## Current integrations
 
 | Name | Telegram |
-|---|---|---|
+|---|---|
 | Maestros de S/C Tenerife | https://t.me/nombramientos_maestros_tfe |
 | Maestros de Las Palmas | https://t.me/nombramientos_maestros_lp |
 | Profesores de ambas | https://t.me/nombramientos_profesores |
