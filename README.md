@@ -5,7 +5,7 @@ Serverless app to check the daily [substitute teachers announcements](https://ww
 ## Requirements
 
 - [Go](https://golang.org) 1.16
-- [Terraform](https://www.terraform.io) 0.14.8
+- [Terraform](https://www.terraform.io) 1.0.0
 
 ## Architecture
 

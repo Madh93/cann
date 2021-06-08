@@ -2,7 +2,7 @@
 .terraform/
 *.tfstate*
 *.tfvars
-.terraform.lock.hcl
+deploy/modules/**/.terraform.lock.hcl
 
 # Log files
 *.log
