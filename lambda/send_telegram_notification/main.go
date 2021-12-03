@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 
@@ -24,6 +25,12 @@ var (
 type sendDocumentReqBody struct {
 	ChatID   string `json:"chat_id"`
 	Document string `json:"document"`
+}
+
+type telegramResponse struct {
+	Ok          bool   `json:"ok"`
+	ErrorCode   int    `json:"error_code,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 func exitErrorf(msg string, args ...interface{}) {
@@ -58,9 +65,23 @@ func sendTelegramNotification(ctx context.Context, document string) error {
 	// Send notification
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(reqBytes))
 	if err != nil {
-		return fmt.Errorf("Unable to post %q url, %w", url, err)
+		return fmt.Errorf("unable to post %q url, %w", url, err)
 	}
 	defer resp.Body.Close()
+
+	// Parse response
+	var response telegramResponse
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("unable to read response body, %w", err)
+	}
+	if err := json.Unmarshal(respBytes, &response); err != nil {
+		return fmt.Errorf("unable to unmarshal response body json, %w", err)
+	}
+
+	if !response.Ok {
+		return fmt.Errorf("unexpected %d status code! %v", response.ErrorCode, response.Description)
+	}
 
 	fmt.Printf("The announcement %q was sent to %q Telegram channel successfully!\n", document, telegramChatID)
 	return nil
