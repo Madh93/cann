@@ -12,6 +12,7 @@ deploy/modules/**/.terraform.lock.hcl
 
 # Packages
 artifacts/
+.bin/
 *.zip
 
 
