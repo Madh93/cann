@@ -197,6 +197,7 @@ module "send_telegram_notification_lambda" {
   prefix        = "${local.prefix}${each.key}"
   function_name = "send-telegram-notification"
   description   = "Send a Telegram notification when a new announcement has been published"
+  timeout       = 10
   tags          = var.tags
 
   variables = {
