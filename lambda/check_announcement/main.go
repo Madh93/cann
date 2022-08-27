@@ -35,6 +35,13 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
+func isRunningInAWS() bool {
+	if _, ok := os.LookupEnv("AWS_EXECUTION_ENV"); ok {
+		return true
+	}
+	return false
+}
+
 func existsTodayAnnouncementInDynamo(ctx context.Context) bool {
 	fmt.Printf("Checking if today's announcement exists in %q DynamoDB table...\n", dynamodbTable)
 
@@ -67,10 +74,10 @@ func existsNewAnnouncement(ctx context.Context) bool {
 	status := resp.StatusCode
 
 	switch status {
-	case 200, 404:
+	case 200, 403, 404:
 		break
 	default:
-		exitErrorf("unexpected %q status code!", status)
+		exitErrorf("unexpected %d status code!", status)
 	}
 
 	return status == 200
@@ -127,5 +134,9 @@ func main() {
 	client = dynamodb.NewFromConfig(cfg)
 	fmt.Println("Ready!")
 
-	lambda.Start(lambdaHandler)
+	if isRunningInAWS() {
+		lambda.Start(lambdaHandler)
+	} else {
+		lambdaHandler(context.TODO())
+	}
 }
