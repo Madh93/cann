@@ -1,5 +1,5 @@
 # TODO: https://docs.gitlab.com/13.9/ee/ci/yaml/README.html#globally-defined-image-services-cache-before_script-after_script
-image: golang:1.16
+image: golang:1.19
 
 variables:
   TF_ROOT: $CI_PROJECT_DIR/deploy
