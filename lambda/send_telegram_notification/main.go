@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"path"
 	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -26,8 +29,52 @@ func exitErrorf(msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
+func downloadFile(url string) (filename string, err error) {
+	fmt.Printf("Downloading document file from %q...\n", url)
+
+	// Create temporary file
+	tmpdir, err := os.MkdirTemp("", "*")
+	if err != nil {
+		return
+	}
+	filename = fmt.Sprintf("%s/%s", tmpdir, path.Base(url))
+	file, err := os.Create(filename)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check server response
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("unable to download file, bad status: %q", resp.Status)
+		return
+	}
+
+	// Save to file
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("The announcement file %q was downloaded to %q successfully!\n", url, filename)
+	return
+}
+
 func sendTelegramNotification(ctx context.Context, document string) error {
 	fmt.Printf("Sending new announcement to %q Telegram channel...\n", telegramChatName)
+
+	// Download file
+	filename, err := downloadFile(document)
+	if err != nil {
+		return fmt.Errorf("error downloading file, %w", err)
+	}
 
 	// Retrieve Telegram Auth Token
 	result, err := client.GetParameter(ctx, &ssm.GetParameterInput{
@@ -45,7 +92,7 @@ func sendTelegramNotification(ctx context.Context, document string) error {
 	}
 
 	// Send notification
-	msg := tgbotapi.NewDocument(telegramChatID, tgbotapi.FilePath(document))
+	msg := tgbotapi.NewDocument(telegramChatID, tgbotapi.FilePath(filename))
 	_, err = bot.Send(msg)
 	if err != nil {
 		return fmt.Errorf("unable to send document %w", err)
