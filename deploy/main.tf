@@ -201,7 +201,8 @@ module "send_telegram_notification_lambda" {
   tags          = var.tags
 
   variables = {
-    TELEGRAM_CHAT_ID = each.value.telegram_chat_id
+    TELEGRAM_CHAT_ID   = each.value.telegram_chat_id
+    TELEGRAM_CHAT_NAME = each.value.telegram_chat_name
   }
 
   policies = {

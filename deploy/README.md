@@ -48,7 +48,7 @@ Terraform code to deploy the infrastructure.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_announcements"></a> [announcements](#input\_announcements) | Target announcements checks | <pre>map(object({<br>    base_url         = string<br>    date_format      = string<br>    telegram_chat_id = string<br>  }))</pre> | n/a | yes |
+| <a name="input_announcements"></a> [announcements](#input\_announcements) | Target announcements checks | <pre>map(object({<br>    base_url           = string<br>    date_format        = string<br>    telegram_chat_id   = string<br>    telegram_chat_name = string<br>  }))</pre> | n/a | yes |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Unique prefix name to identify the resources | `string` | `""` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"eu-west-1"` | no |
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | Scheduling expression to check a new announcement | `string` | n/a | yes |

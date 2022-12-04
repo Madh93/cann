@@ -1,8 +1,9 @@
 announcements = {
   ndptf = {
-    base_url         = "http://www.gobcan.es/educacion/Nombramientos/Documentos"
-    date_format      = "02-01-06"
-    telegram_chat_id = "@nombramientos_maestros_tfe"
+    base_url           = "http://www.gobcan.es/educacion/Nombramientos/Documentos"
+    date_format        = "02-01-06"
+    telegram_chat_id   = "123456789"
+    telegram_chat_name = "@nombramientos_maestros_tfe"
   }
 }
 schedule_expression = "cron(*/1 6-20 ? * 2-6 *)"
