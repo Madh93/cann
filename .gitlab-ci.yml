@@ -62,8 +62,6 @@ package:
       - master
   stage: package
   extends: .go-cache
-  before_script:
-    - apt-get update && apt-get install -y curl
   script:
     - make package
   artifacts:
