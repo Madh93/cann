@@ -13,10 +13,11 @@ variable "prefix" {
 variable "announcements" {
   description = "Target announcements checks"
   type = map(object({
-    base_url           = string
-    date_format        = string
-    telegram_chat_id   = string
-    telegram_chat_name = string
+    base_url              = string
+    date_format           = string
+    telegram_chat_id      = string
+    telegram_chat_name    = string # Deprecated in favor of 'telegram_channel_name'
+    telegram_channel_name = string
   }))
 }
 

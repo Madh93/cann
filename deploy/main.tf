@@ -201,8 +201,11 @@ module "send_telegram_notification_lambda" {
   tags          = var.tags
 
   variables = {
-    TELEGRAM_CHAT_ID   = each.value.telegram_chat_id
-    TELEGRAM_CHAT_NAME = each.value.telegram_chat_name
+    TELEGRAM_CHAT_ID          = each.value.telegram_chat_id   # Deprecated in favor of 'SSM_TELEGRAM_CHAT_ID'
+    TELEGRAM_CHAT_NAME        = each.value.telegram_chat_name # Deprecated in favor of 'SSM_TELEGRAM_CHANNEL_NAME'
+    SSM_TELEGRAM_AUTH_TOKEN   = "/announcements/telegram/token"
+    SSM_TELEGRAM_CHAT_ID      = "/announcements/telegram/{{.AnnouncementID}}/chat_id"
+    SSM_TELEGRAM_CHANNEL_NAME = "/announcements/telegram/{{.AnnouncementID}}/channel_name"
   }
 
   policies = {
@@ -232,7 +235,7 @@ data "aws_iam_policy_document" "ssm_send_telegram_notification_lambda" {
 }
 
 ############################
-# SSM
+# SSM: Telegram
 ############################
 
 resource "aws_ssm_parameter" "telegram_auth_token" {
@@ -240,6 +243,28 @@ resource "aws_ssm_parameter" "telegram_auth_token" {
   description = "Telegram Auth Token to publish new announcements"
   value       = var.telegram_auth_token
   type        = "SecureString"
+  overwrite   = true
+  tags        = var.tags
+}
+
+resource "aws_ssm_parameter" "telegram_chat_id" {
+  for_each = var.announcements
+
+  name        = "/announcements/telegram/${each.key}/chat_id"
+  description = "Telegram Chat ID where to publish new announcements"
+  value       = each.value.telegram_chat_id
+  type        = "String"
+  overwrite   = true
+  tags        = var.tags
+}
+
+resource "aws_ssm_parameter" "telegram_channel_name" {
+  for_each = var.announcements
+
+  name        = "/announcements/telegram/${each.key}/channel_name"
+  description = "Telegram Channel Name where to publish new announcements"
+  value       = each.value.telegram_channel_name
+  type        = "String"
   overwrite   = true
   tags        = var.tags
 }

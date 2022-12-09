@@ -39,6 +39,8 @@ Terraform code to deploy the infrastructure.
 | [aws_sns_topic.default](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/sns_topic) | resource |
 | [aws_sns_topic_subscription.default](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/sns_topic_subscription) | resource |
 | [aws_ssm_parameter.telegram_auth_token](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/ssm_parameter) | resource |
+| [aws_ssm_parameter.telegram_channel_name](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/ssm_parameter) | resource |
+| [aws_ssm_parameter.telegram_chat_id](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/ssm_parameter) | resource |
 | [aws_iam_policy_document.dynamodb_check_announcement_lambda](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.dynamodb_send_notification_lambda](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.sns_send_notification_lambda](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/iam_policy_document) | data source |
@@ -48,7 +50,7 @@ Terraform code to deploy the infrastructure.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_announcements"></a> [announcements](#input\_announcements) | Target announcements checks | <pre>map(object({<br>    base_url           = string<br>    date_format        = string<br>    telegram_chat_id   = string<br>    telegram_chat_name = string<br>  }))</pre> | n/a | yes |
+| <a name="input_announcements"></a> [announcements](#input\_announcements) | Target announcements checks | <pre>map(object({<br>    base_url              = string<br>    date_format           = string<br>    telegram_chat_id      = string<br>    telegram_chat_name    = string # Deprecated in favor of 'telegram_channel_name'<br>    telegram_channel_name = string<br>  }))</pre> | n/a | yes |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Unique prefix name to identify the resources | `string` | `""` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"eu-west-1"` | no |
 | <a name="input_schedule_expression"></a> [schedule\_expression](#input\_schedule\_expression) | Scheduling expression to check a new announcement | `string` | n/a | yes |
