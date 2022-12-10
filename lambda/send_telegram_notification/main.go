@@ -3,109 +3,98 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"path"
 	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"gitlab.com/Madh93/cann/internal/utils"
 )
 
 var (
-	telegramChatID, _ = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
-	telegramChatName  = os.Getenv("TELEGRAM_CHAT_NAME")
+	client         *ssm.Client
+	announcementID string
 
-	client *ssm.Client
+	// Telegram config
+	authToken   string
+	chatID      int64
+	channelName string
 )
 
-func exitErrorf(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, msg+"\n", args...)
-	os.Exit(1)
-}
-
-func downloadFile(url string) (filename string, err error) {
-	fmt.Printf("Downloading document file from %q...\n", url)
-
-	// Create temporary file
-	tmpdir, err := os.MkdirTemp("", "*")
-	if err != nil {
-		return
-	}
-	filename = fmt.Sprintf("%s/%s", tmpdir, path.Base(url))
-	file, err := os.Create(filename)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-
-	// Check server response
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("unable to download file, bad status: %q", resp.Status)
-		return
-	}
-
-	// Save to file
-	_, err = io.Copy(file, resp.Body)
-	if err != nil {
-		return
-	}
-
-	fmt.Printf("The announcement file %q was downloaded to %q successfully!\n", url, filename)
-	return
-}
-
-func sendTelegramNotification(ctx context.Context, document string) error {
-	fmt.Printf("Sending new announcement to %q Telegram channel...\n", telegramChatName)
-
-	// Download file
-	filename, err := downloadFile(document)
-	if err != nil {
-		return fmt.Errorf("error downloading file, %w", err)
-	}
-
+func loadSSMParameters(ctx context.Context) (err error) {
 	// Retrieve Telegram Auth Token
-	result, err := client.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String("/announcements/telegram/token"),
-		WithDecryption: true,
-	})
+	authToken, err = utils.GetSSMParameterValue(client, ctx, os.Getenv("SSM_TELEGRAM_AUTH_TOKEN"))
 	if err != nil {
 		return fmt.Errorf("unable to get Telegram Auth Token from SSM, %w", err)
 	}
 
+	// Retrieve all parameters at once
+	parameters, err := utils.GetSSMParameters(client, ctx, fmt.Sprintf("/announcements/telegram/%s", announcementID))
+	if err != nil {
+		return fmt.Errorf("unable to get parameters from SSM, %w", err)
+	}
+
+	// Set Chat ID
+	channelIDTemplate, _ := utils.ParseSSMParemeterTemplate(os.Getenv("SSM_TELEGRAM_CHAT_ID"), announcementID)
+	chatIDStr, err := utils.GetSSMParameterValueFrom(parameters, channelIDTemplate)
+	if err != nil {
+		return fmt.Errorf("unable to get Telegram Chat ID from SSM, %w", err)
+	}
+	chatID, _ = strconv.ParseInt(chatIDStr, 10, 64)
+
+	// Set Channel Name
+	channelNameTemplate, _ := utils.ParseSSMParemeterTemplate(os.Getenv("SSM_TELEGRAM_CHANNEL_NAME"), announcementID)
+	channelName, err = utils.GetSSMParameterValueFrom(parameters, channelNameTemplate)
+	if err != nil {
+		return fmt.Errorf("unable to get Telegram Channel Name from SSM, %w", err)
+	}
+
+	return
+}
+
+func sendTelegramNotification(ctx context.Context, url string) error {
+	fmt.Printf("Sending new announcement to %q Telegram channel...\n", channelName)
+
+	// Download file
+	filename, err := utils.DownloadFile(url)
+	if err != nil {
+		return fmt.Errorf("error downloading file, %w", err)
+	}
+
 	// Initialize bot
-	bot, err := tgbotapi.NewBotAPI(*result.Parameter.Value)
+	bot, err := tgbotapi.NewBotAPI(authToken)
 	if err != nil {
 		return fmt.Errorf("unable to initialize Telegram Bot, %w", err)
 	}
 
 	// Send notification
-	msg := tgbotapi.NewDocument(telegramChatID, tgbotapi.FilePath(filename))
+	msg := tgbotapi.NewDocument(chatID, tgbotapi.FilePath(filename))
 	_, err = bot.Send(msg)
 	if err != nil {
 		return fmt.Errorf("unable to send document %w", err)
 	}
 
-	fmt.Printf("The announcement %q was sent to %q Telegram channel successfully!\n", document, telegramChatName)
+	fmt.Printf("The announcement %q was sent to %q Telegram channel successfully!\n", url, channelName)
 	return nil
 }
 
 func lambdaHandler(ctx context.Context, snsEvent events.SNSEvent) error {
 	for _, record := range snsEvent.Records {
 		fmt.Println("A new message has arrived!")
-		err := sendTelegramNotification(ctx, record.SNS.Message)
+
+		// Setup SSM Parameters
+		url := record.SNS.Message
+		announcementID = utils.GetAnnouncementID(url)
+		err := loadSSMParameters(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to load SSM Parameters, %v", err)
+		}
+
+		// Send notification
+		err = sendTelegramNotification(ctx, url)
 		if err != nil {
 			return fmt.Errorf("error sending notification to Telegram, %w", err)
 		}
@@ -119,7 +108,7 @@ func main() {
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		exitErrorf("cannot load the AWS config: %v", err)
+		utils.ExitWithError("cannot load the AWS config: %v", err)
 	}
 
 	client = ssm.NewFromConfig(cfg)
