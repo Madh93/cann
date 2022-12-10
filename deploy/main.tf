@@ -2,8 +2,11 @@ provider "aws" {
   region = var.region
 }
 
+data "aws_caller_identity" "current" {}
+
 locals {
-  prefix = var.prefix != "" ? "${var.prefix}-" : ""
+  prefix     = var.prefix != "" ? "${var.prefix}-" : ""
+  account_id = data.aws_caller_identity.current.account_id
 }
 
 ############################
@@ -226,10 +229,11 @@ data "aws_iam_policy_document" "ssm_send_telegram_notification_lambda" {
   statement {
     sid = "AllowGetParameterFromSSM"
     actions = [
-      "ssm:GetParameter"
+      "ssm:GetParameter",
+      "ssm:GetParametersByPath"
     ]
     resources = [
-      aws_ssm_parameter.telegram_auth_token.arn
+      "arn:aws:ssm:${var.region}:${local.account_id}:parameter/announcements/telegram/*"
     ]
   }
 }

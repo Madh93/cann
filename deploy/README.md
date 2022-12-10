@@ -41,6 +41,7 @@ Terraform code to deploy the infrastructure.
 | [aws_ssm_parameter.telegram_auth_token](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/ssm_parameter) | resource |
 | [aws_ssm_parameter.telegram_channel_name](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/ssm_parameter) | resource |
 | [aws_ssm_parameter.telegram_chat_id](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/resources/ssm_parameter) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.dynamodb_check_announcement_lambda](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.dynamodb_send_notification_lambda](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.sns_send_notification_lambda](https://registry.terraform.io/providers/hashicorp/aws/3.44.0/docs/data-sources/iam_policy_document) | data source |
