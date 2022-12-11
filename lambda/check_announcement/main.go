@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -12,7 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"gitlab.com/Madh93/cann/internal/utils"
 )
+
+type Event struct {
+	AnnouncementID string `json:"AnnouncementID"`
+}
 
 type Announcement struct {
 	URL string
@@ -23,24 +29,10 @@ var (
 	dynamodbTable = os.Getenv("DYNAMODB_TABLE")
 	baseURL       = os.Getenv("BASE_URL")
 	dateFormat    = os.Getenv("DATE_FORMAT")
-	prefix        = os.Getenv("PREFIX")
 
-	url = fmt.Sprintf("%s/%s%s.PDF", baseURL, prefix, time.Now().Format(dateFormat))
-
+	url    string
 	client *dynamodb.Client
 )
-
-func exitErrorf(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, msg+"\n", args...)
-	os.Exit(1)
-}
-
-func isRunningInAWS() bool {
-	if _, ok := os.LookupEnv("AWS_EXECUTION_ENV"); ok {
-		return true
-	}
-	return false
-}
 
 func existsTodayAnnouncementInDynamo(ctx context.Context) bool {
 	fmt.Printf("Checking if today's announcement exists in %q DynamoDB table...\n", dynamodbTable)
@@ -54,7 +46,7 @@ func existsTodayAnnouncementInDynamo(ctx context.Context) bool {
 		},
 	})
 	if err != nil {
-		exitErrorf("Failed to get the item from table %q, %v", dynamodbTable, err)
+		utils.ExitWithError("Failed to get the item from table %q, %v", dynamodbTable, err)
 	}
 
 	if output.Item == nil {
@@ -69,7 +61,7 @@ func existsNewAnnouncement(ctx context.Context) bool {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		exitErrorf("unable to get %q, %v", url, err)
+		utils.ExitWithError("unable to get %q, %v", url, err)
 	}
 	status := resp.StatusCode
 
@@ -77,7 +69,7 @@ func existsNewAnnouncement(ctx context.Context) bool {
 	case 200, 403, 404:
 		break
 	default:
-		exitErrorf("unexpected %d status code!", status)
+		utils.ExitWithError("unexpected %d status code!", status)
 	}
 
 	return status == 200
@@ -108,7 +100,12 @@ func insertAnnoucementInDynamo(ctx context.Context) error {
 	return nil
 }
 
-func lambdaHandler(ctx context.Context) error {
+func lambdaHandler(ctx context.Context, event Event) error {
+	// Setup URL
+	announcementID := strings.ToUpper(event.AnnouncementID)
+	fmt.Printf("Current AnnouncementID: %q\n", announcementID)
+	url = fmt.Sprintf("%s/%s%s.PDF", baseURL, announcementID, time.Now().Format(dateFormat))
+
 	if !existsTodayAnnouncementInDynamo(ctx) {
 		if existsNewAnnouncement(ctx) {
 			fmt.Println("Today's announcement has been published!")
@@ -128,15 +125,15 @@ func main() {
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		exitErrorf("cannot load the AWS config: %v", err)
+		utils.ExitWithError("cannot load the AWS config: %v", err)
 	}
 
 	client = dynamodb.NewFromConfig(cfg)
 	fmt.Println("Ready!")
 
-	if isRunningInAWS() {
+	if utils.IsRunningInAWS() {
 		lambda.Start(lambdaHandler)
 	} else {
-		lambdaHandler(context.TODO())
+		lambdaHandler(context.TODO(), Event{AnnouncementID: os.Getenv("ANNOUNCEMENT_ID")})
 	}
 }

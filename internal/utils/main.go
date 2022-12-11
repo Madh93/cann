@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+// Check if lambda is running in AWS or locally.
+func IsRunningInAWS() bool {
+	if _, ok := os.LookupEnv("AWS_EXECUTION_ENV"); ok {
+		return true
+	}
+	return false
+}
+
 // Exit with an error message.
 func ExitWithError(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
