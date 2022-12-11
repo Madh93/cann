@@ -72,8 +72,9 @@ resource "aws_cloudwatch_event_rule" "check_announcement_lambda" {
 resource "aws_cloudwatch_event_target" "check_announcement_lambda" {
   for_each = var.announcements
 
-  rule = aws_cloudwatch_event_rule.check_announcement_lambda[each.key].name
-  arn  = module.check_announcement_lambda[each.key].arn
+  rule  = aws_cloudwatch_event_rule.check_announcement_lambda[each.key].name
+  arn   = module.check_announcement_lambda[each.key].arn
+  input = jsonencode({ AnnouncementID = upper(each.key) })
 }
 
 ############################
@@ -94,7 +95,7 @@ module "check_announcement_lambda" {
     BASE_URL       = each.value.base_url
     DATE_FORMAT    = each.value.date_format
     DYNAMODB_TABLE = aws_dynamodb_table.default[each.key].id
-    PREFIX         = upper(each.key)
+    PREFIX         = upper(each.key) # TODO: Deprecated
   }
 
   policies = {
