@@ -20,7 +20,7 @@ func ExitWithError(msg string, args ...interface{}) {
 func GetAnnouncementID(url string) string {
 	value := os.Getenv("ANNOUNCEMENT_ID")
 	if len(value) == 0 {
-		pattern := regexp.MustCompile(`https://.*(NDPLP|NDS|NDPTF).+`)
+		pattern := regexp.MustCompile(`https?://.*(NDPLP|NDS|NDPTF).+`)
 		return strings.ToLower(pattern.FindStringSubmatch(url)[1])
 	}
 	return value
