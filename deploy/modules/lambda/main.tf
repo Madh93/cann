@@ -34,10 +34,6 @@ resource "aws_lambda_function" "this" {
       variables = var.variables
     }
   }
-
-  lifecycle {
-    ignore_changes = [last_modified]
-  }
 }
 
 ############################

@@ -39,7 +39,7 @@ go-tests:
 terraform-tests:
   stage: test
   image:
-    name: hashicorp/terraform:1.0.0
+    name: hashicorp/terraform:1.3.7
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
@@ -76,7 +76,7 @@ plan:
       - master
   stage: predeploy
   image:
-    name: hashicorp/terraform:1.0.0
+    name: hashicorp/terraform:1.3.7
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
@@ -97,7 +97,7 @@ apply:
       - master
   stage: deploy
   image:
-    name: hashicorp/terraform:1.0.0
+    name: hashicorp/terraform:1.3.7
     entrypoint:
       - '/usr/bin/env'
       - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
