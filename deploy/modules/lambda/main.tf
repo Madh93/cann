@@ -1,5 +1,5 @@
 locals {
-  function_name      = "${var.prefix}-${var.function_name}"
+  function_name      = var.prefix != "" ? "${var.prefix}-${var.function_name}" : var.function_name
   function_name_path = replace(var.function_name, "-", "_")
 }
 

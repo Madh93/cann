@@ -13,12 +13,21 @@ variable "prefix" {
 variable "announcements" {
   description = "Target announcements checks"
   type = map(object({
-    base_url              = string
-    date_format           = string
     telegram_chat_id      = string
-    telegram_chat_name    = string # Deprecated in favor of 'telegram_channel_name'
     telegram_channel_name = string
   }))
+}
+
+variable "base_url" {
+  description = "The base url where announcements are published"
+  type        = string
+  default     = "http://www.gobcan.es/educacion/Nombramientos/Documentos"
+}
+
+variable "date_format" {
+  description = "Date format used in announcements filenames"
+  type        = string
+  default     = "02-01-06"
 }
 
 variable "schedule_expression" {
