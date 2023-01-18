@@ -180,7 +180,7 @@ module "send_telegram_notification_lambda" {
   prefix        = var.prefix
   function_name = "send-telegram-notification"
   description   = "Send a Telegram notification when a new announcement has been published"
-  timeout       = 10
+  timeout       = 30
 
   variables = {
     SSM_TELEGRAM_AUTH_TOKEN   = "/announcements/telegram/token"
