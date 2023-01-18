@@ -48,7 +48,6 @@ No modules.
 | <a name="input_policies"></a> [policies](#input\_policies) | Policies to attach to the default IAM role | `map(string)` | `{}` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Unique prefix name to identify the resources | `string` | n/a | yes |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | Runtime of the lambda function | `string` | `"go1.x"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add | `map(string)` | `{}` | no |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Amount of time the lambda function has to run in seconds | `number` | `5` | no |
 | <a name="input_variables"></a> [variables](#input\_variables) | Environment variables that are accessible from the function code during execution | `map(any)` | `{}` | no |
 

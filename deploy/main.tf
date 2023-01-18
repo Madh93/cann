@@ -1,5 +1,9 @@
 provider "aws" {
   region = var.region
+
+  default_tags {
+    tags = var.tags
+  }
 }
 
 data "aws_caller_identity" "current" {}
@@ -16,7 +20,6 @@ locals {
 resource "aws_dynamodb_table" "default" {
   name     = "${local.prefix}announcements-table"
   hash_key = "URL"
-  tags     = var.tags
 
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
@@ -42,7 +45,6 @@ resource "aws_dynamodb_table" "default" {
 
 resource "aws_sns_topic" "default" {
   name = "${local.prefix}announcements-topic"
-  tags = var.tags
 }
 
 resource "aws_sns_topic_subscription" "default" {
@@ -81,7 +83,6 @@ module "check_announcement_lambda" {
   prefix        = var.prefix
   function_name = "check-announcement"
   description   = "Check if a new announcement has been published"
-  tags          = var.tags
 
   variables = {
     BASE_URL       = var.base_url
@@ -124,7 +125,6 @@ module "send_notification_lambda" {
   prefix        = var.prefix
   function_name = "send-notification"
   description   = "Notifies to SNS that a new announcement has been published"
-  tags          = var.tags
 
   variables = {
     TOPIC_ARN = aws_sns_topic.default.arn
@@ -181,7 +181,6 @@ module "send_telegram_notification_lambda" {
   function_name = "send-telegram-notification"
   description   = "Send a Telegram notification when a new announcement has been published"
   timeout       = 10
-  tags          = var.tags
 
   variables = {
     SSM_TELEGRAM_AUTH_TOKEN   = "/announcements/telegram/token"
@@ -224,7 +223,6 @@ resource "aws_ssm_parameter" "telegram_auth_token" {
   value       = var.telegram_auth_token
   type        = "SecureString"
   overwrite   = true
-  tags        = var.tags
 }
 
 resource "aws_ssm_parameter" "telegram_chat_id" {
@@ -235,7 +233,6 @@ resource "aws_ssm_parameter" "telegram_chat_id" {
   value       = each.value.telegram_chat_id
   type        = "String"
   overwrite   = true
-  tags        = var.tags
 }
 
 resource "aws_ssm_parameter" "telegram_channel_name" {
@@ -246,5 +243,4 @@ resource "aws_ssm_parameter" "telegram_channel_name" {
   value       = each.value.telegram_channel_name
   type        = "String"
   overwrite   = true
-  tags        = var.tags
 }

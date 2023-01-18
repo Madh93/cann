@@ -54,9 +54,3 @@ variable "allowed_triggers" {
   type        = map(map(string))
   default     = {}
 }
-
-variable "tags" {
-  description = "A map of tags to add"
-  type        = map(string)
-  default     = {}
-}

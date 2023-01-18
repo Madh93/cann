@@ -9,7 +9,6 @@ locals {
 
 resource "aws_lambda_function" "this" {
   function_name = local.function_name
-  tags          = var.tags
 
   # Runtime settings
   runtime = var.runtime
@@ -44,7 +43,6 @@ resource "aws_iam_role" "this" {
   name               = "AWSLambda-${local.function_name}"
   description        = "IAM role for the lambda function: ${local.function_name}"
   assume_role_policy = data.aws_iam_policy_document.default_role.json
-  tags               = var.tags
 }
 
 data "aws_iam_policy_document" "default_role" {
@@ -124,5 +122,4 @@ resource "aws_lambda_permission" "this" {
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/aws/lambda/${local.function_name}"
   retention_in_days = 14
-  tags              = var.tags
 }
